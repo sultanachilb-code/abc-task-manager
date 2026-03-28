@@ -359,23 +359,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;" id="task-status-list"></div>
           </div>
           <div class="panel">
-            <div class="panel-title">Email Template Format</div>
+            <div class="panel-title">BPM Email Template</div>
             <div class="template-label">Send to sultanachi.lb@gmail.com</div>
-            <div class="template-box">Subject: [ABC-TASK] Event Title
+            <div class="template-box">Subject: [BPM] Task title here
 
-TITLE: Your Event Title
-DATE: YYYY-MM-DD
-TIME: HH:MM
-LOCATION: Venue / Room
-DURATION: 60 mins
-CATEGORY: Operations
-
-TASKS:
-- Task name | Assigned: Name | Due: YYYY-MM-DD
-- Task name | Assigned: Name | Due: YYYY-MM-DD
-
-NOTES:
-Any additional notes here.</div>
+Task:             ← required
+Date:             ← required
+Deadline:
+Location:
+Coordinated with:</div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text3);line-height:1.6;">
+              <strong style="color:var(--red);">*</strong> Task and Date are mandatory.<br>
+              Deadline, Location, Coordinated with are optional.
+            </div>
           </div>
         </div>
       </div>
@@ -472,7 +468,7 @@ Any additional notes here.</div>
     </div>
     <div style="padding:24px;">
       <div style="margin-bottom:16px;padding:14px 16px;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius);font-size:13px;color:var(--accent);">
-        <strong>How it works:</strong> Send an email to <strong>sultanachi.lb@gmail.com</strong> with subject starting with <strong>[ABC-TASK]</strong>. The Apps Script backend polls Gmail every 10 minutes and imports it here automatically.
+        <strong>How it works:</strong> Send an email to <strong>sultanachi.lb@gmail.com</strong> with subject starting with <strong>[BPM]</strong>. Fill in Task: and Date: in the body (mandatory). Apps Script polls Gmail every 10 minutes and imports automatically.
       </div>
       <div class="email-log" id="email-log-list">
         <div class="empty-state">
@@ -583,7 +579,7 @@ Any additional notes here.</div>
 <!-- Toast container -->
 <div class="toast-container" id="toasts"></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── State ────────────────────────────────────────────────────────────────────
 let state = {
   events: [],
@@ -964,10 +960,10 @@ function loadDemo(){
     {id:'demo3',title:'Emergency AC Maintenance',date:fmt(d3),time:'14:00',location:'Level B1 – Technical Room',duration:'120',category:'maintenance',notes:'Unit 7 compressor fault.',tasks:[
       {name:'Call HVAC contractor',assignee:'Sultan',due:fmt(d3),done:true},
       {name:'File maintenance report',assignee:'Sultan',due:fmt(d3),done:false},
-    ],source:'manual',createdAt:new Date().toISOString()},
+      ],source:'manual',createdAt:new Date().toISOString()},
   ];
   state.emails=[
-    {id:'em1',subject:'[ABC-TASK] Tenant Fit-Out Review',from:'sultan@abc.com',received:new Date(Date.now()-3600000).toISOString(),status:'imported',read:true},
+    {id:'em1',subject:'[BPM] Fish Pond Cleaning',from:'sultan@abc.com',received:new Date(Date.now()-3600000).toISOString(),status:'imported',read:true},
   ];
   save();
 }
