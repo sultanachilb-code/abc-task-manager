@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ABC Task & Calendar Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f4f2ee;
+  --surface: #ffffff;
+  --surface2: #faf8f5;
+  --border: #e2ddd6;
+  --border2: #cfc9c0;
+  --text: #1a1814;
+  --text2: #6b6560;
+  --text3: #9e9890;
+  --accent: #1e4d8c;
+  --accent2: #2563b0;
+  --accent-light: #e8effc;
+  --teal: #0f6e56;
+  --teal-light: #e1f5ee;
+  --amber: #854f0b;
+  --amber-light: #faeeda;
+  --red: #a32d2d;
+  --red-light: #fcebeb;
+  --green: #3b6d11;
+  --green-light: #eaf3de;
+  --purple: #534ab7;
+  --purple-light: #eeedfe;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+/* Layout */
+.shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+
+/* Sidebar */
+.sidebar-brand{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+.brand-mark{display:flex;align-items:center;gap:10px;}
+.brand-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.brand-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;}
+.brand-name{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-0.3px;}
+.brand-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;}
+.nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:8px 8px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:14px;font-weight:400;transition:all .15s;border:none;background:none;width:100%;text-align:left;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:500;}
+.nav-item .badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--accent);color:#fff;padding:1px 6px;border-radius:20px;}
+.sidebar-footer{padding:14px 10px;border-top:1px solid var(--border);}
+.sync-status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.sync-dot.idle{background:var(--text3);}
+
+/* Topbar */
+.topbar{padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-title{font-size:18px;font-weight:600;letter-spacing:-0.4px;}
+.topbar-actions{display:flex;align-items:center;gap:10px;}
+.btn{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border2);}
+.btn-secondary:hover{background:var(--bg);}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* Page content */
+.page{display:none;padding:24px;flex:1;}
+.page.active{display:block;}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi-card.blue::before{background:var(--accent);}
+.kpi-card.teal::before{background:var(--teal);}
+.kpi-card.amber::before{background:var(--amber);}
+.kpi-card.red::before{background:var(--red);}
+.kpi-card.green::before{background:var(--green);}
+.kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.kpi-value{font-size:28px;font-weight:600;letter-spacing:-1px;line-height:1;}
+.kpi-sub{font-size:12px;color:var(--text3);margin-top:5px;}
+.kpi-icon{position:absolute;right:16px;top:16px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.kpi-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.kpi-card.blue .kpi-icon{background:var(--accent-light);color:var(--accent);}
+.kpi-card.teal .kpi-icon{background:var(--teal-light);color:var(--teal);}
+.kpi-card.amber .kpi-icon{background:var(--amber-light);color:var(--amber);}
+.kpi-card.red .kpi-icon{background:var(--red-light);color:var(--red);}
+.kpi-card.green .kpi-icon{background:var(--green-light);color:var(--green);}
+
+/* Section headers */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-title{font-size:15px;font-weight:600;color:var(--text);}
+.section-sub{font-size:12px;color:var(--text3);}
+
+/* Calendar */
+.calendar-grid{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.cal-nav{display:flex;align-items:center;gap:12px;}
+.cal-nav button{width:30px;height:30px;border:1px solid var(--border2);border-radius:7px;background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s;}
+.cal-nav button:hover{background:var(--bg);border-color:var(--accent);}
+.cal-nav button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.cal-month{font-size:15px;font-weight:600;min-width:130px;text-align:center;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg);}
+.cal-weekday{text-align:center;padding:10px 4px 8px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-day{min-height:80px;padding:8px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative;}
+.cal-day:nth-child(7n){border-right:none;}
+.cal-day:hover{background:var(--bg);}
+.cal-day.today{background:var(--accent-light);}
+.cal-day.other-month{opacity:.35;}
+.cal-day.selected{background:var(--accent-light);outline:2px solid var(--accent);outline-offset:-2px;}
+.day-num{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:4px;line-height:1;}
+.cal-day.today .day-num{color:var(--accent);font-weight:700;}
+.day-events{display:flex;flex-direction:column;gap:2px;}
+.day-event-pill{font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.day-event-pill.cat-operations{background:#e8effc;color:#1e4d8c;}
+.day-event-pill.cat-maintenance{background:#faeeda;color:#854f0b;}
+.day-event-pill.cat-tenants{background:#e1f5ee;color:#0f6e56;}
+.day-event-pill.cat-management{background:#eeedfe;color:#534ab7;}
+.day-event-pill.cat-inspection{background:#fcebeb;color:#a32d2d;}
+.day-event-pill.cat-default{background:var(--bg);color:var(--text2);}
+
+/* Event detail panel */
+.event-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-top:16px;display:none;}
+.event-panel.show{display:block;}
+.event-panel-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.event-title{font-size:17px;font-weight:600;letter-spacing:-.3px;}
+.event-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.event-tag{display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:20px;font-weight:500;}
+.event-tag svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+
+/* Tasks */
+.task-list{display:flex;flex-direction:column;gap:8px;}
+.task-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;transition:box-shadow .15s;}
+.task-item:hover{box-shadow:var(--shadow);}
+.task-check{width:18px;height:18px;border:2px solid var(--border2);border-radius:5px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s;}
+.task-check:hover{border-color:var(--accent);}
+.task-check.done{background:var(--green);border-color:var(--green);}
+.task-check.done svg{display:block;}
+.task-check svg{display:none;width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.task-body{flex:1;}
+.task-name{font-size:14px;font-weight:500;color:var(--text);line-height:1.4;}
+.task-item.done-task .task-name{text-decoration:line-through;color:var(--text3);}
+.task-details{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;}
+.task-detail{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:4px;}
+.task-detail svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+.task-priority{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:auto;flex-shrink:0;}
+.task-priority.high{background:var(--red-light);color:var(--red);}
+.task-priority.medium{background:var(--amber-light);color:var(--amber);}
+.task-priority.low{background:var(--green-light);color:var(--green);}
+
+/* Filter bar */
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center;}
+.filter-btn{padding:6px 12px;border-radius:20px;font-family:var(--font);font-size:12px;font-weight:500;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s;}
+.filter-btn:hover,.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.search-input{flex:1;min-width:200px;padding:7px 12px;border:1px solid var(--border2);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text);outline:none;}
+.search-input:focus{border-color:var(--accent);}
+
+/* Assignee chips */
+.assignee-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--text2);}
+.assignee-avatar{width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+/* Email log */
+.email-log{display:flex;flex-direction:column;gap:8px;}
+.email-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all .15s;position:relative;}
+.email-item:hover{border-color:var(--accent);box-shadow:var(--shadow);}
+.email-item.unread::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:var(--radius) 0 0 var(--radius);}
+.email-subject{font-size:14px;font-weight:500;margin-bottom:4px;}
+.email-meta{font-size:12px;color:var(--text3);}
+.email-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:6px;}
+.email-status.imported{background:var(--green-light);color:var(--green);}
+.email-status.pending{background:var(--amber-light);color:var(--amber);}
+.email-status.failed{background:var(--red-light);color:var(--red);}
+
+/* Progress bar */
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px;}
+.progress-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .4s;}
+.progress-fill.teal{background:var(--teal);}
+.progress-fill.amber{background:var(--amber);}
+.progress-fill.red{background:var(--red);}
+
+/* Two-col layout */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:16px;}
+@media(max-width:960px){.two-col{grid-template-columns:1fr;}}
+
+/* Panel box */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
+.panel-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.panel-title span{font-size:11px;font-weight:400;color:var(--text3);}
+
+/* Template preview */
+.template-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:var(--mono);font-size:11px;color:var(--text2);white-space:pre;overflow-x:auto;line-height:1.7;}
+.template-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;}
+
+/* Toast */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--text);color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-md);animation:slideUp .2s ease;}
+.toast svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.toast.success{background:var(--teal);}
+.toast.error{background:var(--red);}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:90%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md);}
+.modal-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-close{width:30px;height:30px;border:none;background:var(--bg);border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);}
+.modal-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+.modal-body{padding:20px 22px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:8px;font-family:var(--font);font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-footer{padding:14px 22px 20px;display:flex;gap:10px;justify-content:flex-end;}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);}
+.empty-state svg{width:40px;height:40px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin:0 auto 12px;display:block;}
+.empty-state p{font-size:14px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">ABC Connect</div>
+        <div class="brand-sub">Task Manager</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Overview</div>
+    <button class="nav-item active" onclick="showPage('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('calendar')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Calendar
+      <span class="badge" id="cal-badge">0</span>
+    </button>
+    <div class="nav-label">Work</div>
+    <button class="nav-item" onclick="showPage('tasks')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Tasks
+      <span class="badge" id="task-badge">0</span>
+    </button>
+    <button class="nav-item" onclick="showPage('emails')">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Email Log
+    </button>
+    <div class="nav-label">Config</div>
+    <button class="nav-item" onclick="showPage('settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sync-status">
+      <div class="sync-dot idle" id="sync-dot"></div>
+      <span id="sync-text">Last sync: never</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- Dashboard -->
+  <div class="page active" id="page-dashboard">
+    <div class="topbar">
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary" onclick="triggerSync()">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Sync Gmail
+        </button>
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Event
+        </button>
+      </div>
+    </div>
+    <div style="padding:24px;">
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card blue">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="kpi-label">Total Events</div>
+          <div class="kpi-value" id="kpi-events">0</div>
+          <div class="kpi-sub">This month</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+          <div class="kpi-label">Tasks Done</div>
+          <div class="kpi-value" id="kpi-done">0</div>
+          <div class="kpi-sub" id="kpi-done-sub">of 0 tasks</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="kpi-label">Overdue</div>
+          <div class="kpi-value" id="kpi-overdue">0</div>
+          <div class="kpi-sub">Tasks past due date</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div class="kpi-label">Emails Imported</div>
+          <div class="kpi-value" id="kpi-emails">0</div>
+          <div class="kpi-sub">Templates received</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="kpi-label">Assignees</div>
+          <div class="kpi-value" id="kpi-assignees">0</div>
+          <div class="kpi-sub">Active team members</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="section-header">
+            <div class="section-title">Upcoming Events</div>
+          </div>
+          <div class="task-list" id="upcoming-list">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              <p>No upcoming events. Sync Gmail or add one manually.</p>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="panel">
+            <div class="panel-title">Tasks by Status <span id="task-progress-pct">0%</span></div>
+            <div class="progress-bar"><div class="progress-fill teal" id="task-progress-bar" style="width:0%"></div></div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;" id="task-status-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Email Template Format</div>
+            <div class="template-label">Send to sultanachi.lb@gmail.com</div>
+            <div class="template-box">Subject: [ABC-TASK] Event Title
+
+TITLE: Your Event Title
+DATE: YYYY-MM-DD
+TIME: HH:MM
+LOCATION: Venue / Room
+DURATION: 60 mins
+CATEGORY: Operations
+
+TASKS:
+- Task name | Assigned: Name | Due: YYYY-MM-DD
+- Task name | Assigned: Name | Due: YYYY-MM-DD
+
+NOTES:
+Any additional notes here.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="page" id="page-calendar">
+    <div class="topbar">
+      <div class="topbar-title">Calendar</div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary" onclick="showPage('dashboard')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Event
+        </button>
+      </div>
+    </div>
+    <div style="padding:24px;">
+      <div class="two-col">
+        <div>
+          <div class="calendar-grid">
+            <div class="cal-header">
+              <div class="cal-nav">
+                <button onclick="prevMonth()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <div class="cal-month" id="cal-month-label">Month Year</div>
+                <button onclick="nextMonth()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+              <div style="font-size:12px;color:var(--text3);" id="cal-event-count">0 events</div>
+            </div>
+            <div class="cal-weekdays">
+              <div class="cal-weekday">Sun</div><div class="cal-weekday">Mon</div><div class="cal-weekday">Tue</div>
+              <div class="cal-weekday">Wed</div><div class="cal-weekday">Thu</div><div class="cal-weekday">Fri</div><div class="cal-weekday">Sat</div>
+            </div>
+            <div class="cal-days" id="cal-days"></div>
+          </div>
+          <div class="event-panel" id="event-panel">
+            <div class="event-panel-header">
+              <div class="event-title" id="ep-title">—</div>
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px;" onclick="deleteSelectedEvent()">Delete</button>
+            </div>
+            <div class="event-meta" id="ep-meta"></div>
+            <div class="divider"></div>
+            <div class="section-title" style="font-size:13px;margin-bottom:10px;">Tasks</div>
+            <div class="task-list" id="ep-tasks"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="panel">
+            <div class="panel-title">Events this month</div>
+            <div id="month-event-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks -->
+  <div class="page" id="page-tasks">
+    <div class="topbar">
+      <div class="topbar-title">All Tasks</div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary" onclick="showPage('dashboard')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+      </div>
+    </div>
+    <div style="padding:24px;">
+      <div class="filter-bar">
+        <input class="search-input" placeholder="Search tasks..." id="task-search" oninput="renderTasks()"/>
+        <button class="filter-btn active" onclick="setTaskFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setTaskFilter('pending',this)">Pending</button>
+        <button class="filter-btn" onclick="setTaskFilter('done',this)">Done</button>
+        <button class="filter-btn" onclick="setTaskFilter('overdue',this)">Overdue</button>
+      </div>
+      <div class="task-list" id="all-tasks-list"></div>
+    </div>
+  </div>
+
+  <!-- Email Log -->
+  <div class="page" id="page-emails">
+    <div class="topbar">
+      <div class="topbar-title">Email Log</div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="triggerSync()">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Sync Now
+        </button>
+      </div>
+    </div>
+    <div style="padding:24px;">
+      <div style="margin-bottom:16px;padding:14px 16px;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius);font-size:13px;color:var(--accent);">
+        <strong>How it works:</strong> Send an email to <strong>sultanachi.lb@gmail.com</strong> with subject starting with <strong>[ABC-TASK]</strong>. The Apps Script backend polls Gmail every 10 minutes and imports it here automatically.
+      </div>
+      <div class="email-log" id="email-log-list">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <p>No emails processed yet. Click Sync Now to check Gmail.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="page" id="page-settings">
+    <div class="topbar">
+      <div class="topbar-title">Settings</div>
+    </div>
+    <div style="padding:24px;max-width:600px;">
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="panel-title">Apps Script Backend</div>
+        <div class="form-group">
+          <label class="form-label">Web App URL (from GAS deployment)</label>
+          <input class="form-input" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" value=""/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gmail Address to Monitor</label>
+          <input class="form-input" value="sultanachi.lb@gmail.com" readonly/>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      </div>
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="panel-title">Notification Emails</div>
+        <div class="form-group">
+          <label class="form-label">Send task reminders to (comma-separated)</label>
+          <input class="form-input" id="notify-emails" placeholder="sultan@abc.com, team@abc.com" value=""/>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Data Management</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
+          <button class="btn btn-secondary" onclick="clearAllData()">Clear All Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+</div><!-- end shell -->
+
+<!-- Add Event Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalIfBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Event</div>
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Event Title</label>
+        <input class="form-input" id="f-title" placeholder="e.g. Tenant Fit-Out Review"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" id="f-date" type="date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time</label>
+          <input class="form-input" id="f-time" type="time" value="09:00"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duration (mins)</label>
+          <input class="form-input" id="f-duration" type="number" value="60"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="f-category">
+            <option value="operations">Operations</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="tenants">Tenants</option>
+            <option value="management">Management</option>
+            <option value="inspection">Inspection</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location</label>
+        <input class="form-input" id="f-location" placeholder="e.g. ABC Verdun Mall – Meeting Room 2"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="Additional notes..."></textarea>
+      </div>
+      <div class="divider"></div>
+      <div class="section-title" style="font-size:13px;margin-bottom:10px;">Tasks</div>
+      <div id="task-inputs"></div>
+      <button class="btn btn-secondary" style="font-size:12px;margin-top:8px;" onclick="addTaskInput()">+ Add Task</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let state = {
+  events: [],
+  emails: [],
+  settings: { gasUrl: '', notifyEmails: '' }
+};
+let calYear, calMonth, selectedEventId = null, taskFilter = 'all';
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  const saved = localStorage.getItem('abc_task_mgr');
+  if (saved) state = JSON.parse(saved);
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  document.getElementById('gas-url').value = state.settings.gasUrl || '';
+  document.getElementById('notify-emails').value = state.settings.notifyEmails || '';
+  // Today's date default for form
+  document.getElementById('f-date').value = now.toISOString().split('T')[0];
+  renderAll();
+  // Auto-sync on load if gasUrl set
+  if (state.settings.gasUrl) silentSync();
+}
+
+function save() { localStorage.setItem('abc_task_mgr', JSON.stringify(state)); }
+
+function renderAll() {
+  renderKPIs(); renderCalendar(); renderTasks(); renderEmails(); renderUpcoming(); renderMonthList();
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
+  if(id==='calendar') renderCalendar();
+}
+
+// ── KPIs ─────────────────────────────────────────────────────────────────────
+function renderKPIs() {
+  const allTasks = state.events.flatMap(e=>e.tasks||[]);
+  const done = allTasks.filter(t=>t.done).length;
+  const total = allTasks.length;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const overdue = allTasks.filter(t=>!t.done && t.due && new Date(t.due)<now).length;
+  const assignees = [...new Set(allTasks.map(t=>t.assignee).filter(Boolean))].length;
+  const thisMonth = state.events.filter(e=>{const d=new Date(e.date);return d.getMonth()===new Date().getMonth()&&d.getFullYear()===new Date().getFullYear();}).length;
+  document.getElementById('kpi-events').textContent = thisMonth;
+  document.getElementById('kpi-done').textContent = done;
+  document.getElementById('kpi-done-sub').textContent = 'of '+total+' tasks';
+  document.getElementById('kpi-overdue').textContent = overdue;
+  document.getElementById('kpi-emails').textContent = state.emails.filter(e=>e.status==='imported').length;
+  document.getElementById('kpi-assignees').textContent = assignees;
+  document.getElementById('cal-badge').textContent = thisMonth;
+  document.getElementById('task-badge').textContent = allTasks.filter(t=>!t.done).length;
+  // Progress
+  const pct = total>0?Math.round(done/total*100):0;
+  document.getElementById('task-progress-pct').textContent = pct+'%';
+  document.getElementById('task-progress-bar').style.width = pct+'%';
+  const sl = document.getElementById('task-status-list');
+  sl.innerHTML = [
+    {label:'Completed',count:done,color:'var(--teal)'},
+    {label:'Pending',count:total-done-overdue,color:'var(--accent)'},
+    {label:'Overdue',count:overdue,color:'var(--red)'},
+  ].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;">
+    <span style="display:flex;align-items:center;gap:6px;color:var(--text2);">
+      <span style="width:8px;height:8px;border-radius:50%;background:${s.color};display:inline-block;"></span>${s.label}
+    </span><span style="font-weight:600;">${s.count}</span></div>`).join('');
+}
+
+// ── Upcoming ─────────────────────────────────────────────────────────────────
+function renderUpcoming() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const upcoming = state.events.filter(e=>new Date(e.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,5);
+  const el = document.getElementById('upcoming-list');
+  if(!upcoming.length){el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><p>No upcoming events.</p></div>`;return;}
+  el.innerHTML = upcoming.map(e=>{
+    const tasks = e.tasks||[];
+    const done = tasks.filter(t=>t.done).length;
+    return `<div class="task-item" onclick="showPage('calendar')">
+      <div class="task-check" style="border-color:var(--accent);"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+      <div class="task-body">
+        <div class="task-name">${e.title}</div>
+        <div class="task-details">
+          <span class="task-detail"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${fmtDate(e.date)}</span>
+          <span class="task-detail"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${e.time||''}</span>
+          ${tasks.length?`<span class="task-detail">${done}/${tasks.length} tasks</span>`:''}
+        </div>
+      </div>
+      <span class="day-event-pill cat-${e.category||'default'}" style="font-size:11px;">${e.category||'general'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Calendar ─────────────────────────────────────────────────────────────────
+function renderCalendar() {
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent = months[calMonth]+' '+calYear;
+  const first = new Date(calYear,calMonth,1).getDay();
+  const days = new Date(calYear,calMonth+1,0).getDate();
+  const prevDays = new Date(calYear,calMonth,0).getDate();
+  const today = new Date();
+  const eventsThisMonth = state.events.filter(e=>{const d=new Date(e.date);return d.getMonth()===calMonth&&d.getFullYear()===calYear;});
+  document.getElementById('cal-event-count').textContent = eventsThisMonth.length+' events';
+  let html='';
+  for(let i=0;i<first;i++){
+    const d=prevDays-first+1+i;
+    html+=`<div class="cal-day other-month"><div class="day-num">${d}</div></div>`;
+  }
+  for(let d=1;d<=days;d++){
+    const isToday=today.getDate()===d&&today.getMonth()===calMonth&&today.getFullYear()===calYear;
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEvents=state.events.filter(e=>e.date===dateStr);
+    const selClass=selectedEventId&&dayEvents.some(e=>e.id===selectedEventId)?'selected':'';
+    html+=`<div class="cal-day ${isToday?'today':''} ${selClass}" onclick="selectDay('${dateStr}')">
+      <div class="day-num">${d}</div>
+      <div class="day-events">
+        ${dayEvents.slice(0,2).map(e=>`<div class="day-event-pill cat-${e.category||'default'}" title="${e.title}">${e.title}</div>`).join('')}
+        ${dayEvents.length>2?`<div class="day-event-pill cat-default">+${dayEvents.length-2} more</div>`:''}
+      </div>
+    </div>`;
+  }
+  const remaining=(7-((first+days)%7))%7;
+  for(let i=1;i<=remaining;i++) html+=`<div class="cal-day other-month"><div class="day-num">${i}</div></div>`;
+  document.getElementById('cal-days').innerHTML=html;
+  renderMonthList();
+}
+
+function selectDay(dateStr) {
+  const dayEvents = state.events.filter(e=>e.date===dateStr);
+  if(!dayEvents.length){document.getElementById('event-panel').classList.remove('show');selectedEventId=null;renderCalendar();return;}
+  const ev = dayEvents[0];
+  selectedEventId = ev.id;
+  showEventPanel(ev);
+  renderCalendar();
+}
+
+function showEventPanel(ev) {
+  document.getElementById('event-panel').classList.add('show');
+  document.getElementById('ep-title').textContent = ev.title;
+  document.getElementById('ep-meta').innerHTML = [
+    {icon:'<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',val:fmtDate(ev.date),bg:'var(--accent-light)',col:'var(--accent)'},
+    {icon:'<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',val:ev.time||'—',bg:'var(--bg)',col:'var(--text2)'},
+    {icon:'<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',val:ev.location||'—',bg:'var(--bg)',col:'var(--text2)'},
+    ev.category?{icon:'',val:ev.category,bg:'var(--accent-light)',col:'var(--accent)'}:null
+  ].filter(Boolean).map(m=>`<span class="event-tag" style="background:${m.bg};color:${m.col};">${m.icon}${m.val}</span>`).join('');
+  const tasks = ev.tasks||[];
+  document.getElementById('ep-tasks').innerHTML = tasks.length?tasks.map((t,i)=>`
+    <div class="task-item ${t.done?'done-task':''}">
+      <div class="task-check ${t.done?'done':''}" onclick="toggleTask('${ev.id}',${i})">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="task-body">
+        <div class="task-name">${t.name}</div>
+        <div class="task-details">
+          ${t.assignee?`<span class="task-detail"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${t.assignee}</span>`:''}
+          ${t.due?`<span class="task-detail"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${fmtDate(t.due)}</span>`:''}
+        </div>
+      </div>
+    </div>`).join(''):
+    `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><p>No tasks for this event.</p></div>`;
+}
+
+function renderMonthList() {
+  const eventsThisMonth = state.events.filter(e=>{const d=new Date(e.date);return d.getMonth()===calMonth&&d.getFullYear()===calYear;}).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const el = document.getElementById('month-event-list');
+  if(!eventsThisMonth.length){el.innerHTML=`<div style="font-size:13px;color:var(--text3);padding:8px 0;">No events this month.</div>`;return;}
+  el.innerHTML = eventsThisMonth.map(e=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="showEventPanel(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+    <div style="min-width:32px;text-align:center;"><div style="font-size:14px;font-weight:700;color:var(--accent);">${new Date(e.date+'T00:00').getDate()}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;">of ${calMonth+1}</div></div>
+    <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${e.title}</div><div style="font-size:11px;color:var(--text3);">${e.time||''} ${e.location?'· '+e.location:''}</div></div>
+    <span class="day-event-pill cat-${e.category||'default'}">${e.category||'—'}</span>
+  </div>`).join('');
+}
+
+function prevMonth(){if(calMonth===0){calMonth=11;calYear--;}else calMonth--;renderCalendar();}
+function nextMonth(){if(calMonth===11){calMonth=0;calYear++;}else calMonth++;renderCalendar();}
+
+// ── Tasks ────────────────────────────────────────────────────────────────────
+function setTaskFilter(f,btn){taskFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTasks();}
+
+function renderTasks() {
+  const q = (document.getElementById('task-search')||{}).value?.toLowerCase()||'';
+  const now = new Date(); now.setHours(0,0,0,0);
+  let items = [];
+  state.events.forEach(ev=>{
+    (ev.tasks||[]).forEach((t,i)=>{
+      const overdue = !t.done && t.due && new Date(t.due)<now;
+      if(taskFilter==='done'&&!t.done) return;
+      if(taskFilter==='pending'&&t.done) return;
+      if(taskFilter==='overdue'&&!overdue) return;
+      if(q && !t.name.toLowerCase().includes(q) && !(t.assignee||'').toLowerCase().includes(q)) return;
+      items.push({...t, evId:ev.id, evTitle:ev.title, idx:i, overdue});
+    });
+  });
+  const el = document.getElementById('all-tasks-list');
+  if(!items.length){el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><p>No tasks found.</p></div>`;return;}
+  el.innerHTML = items.map(t=>`
+    <div class="task-item ${t.done?'done-task':''}">
+      <div class="task-check ${t.done?'done':''}" onclick="toggleTask('${t.evId}',${t.idx})">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="task-body">
+        <div class="task-name">${t.name}</div>
+        <div class="task-details">
+          <span class="task-detail" style="color:var(--text3);">${t.evTitle}</span>
+          ${t.assignee?`<span class="task-detail"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${t.assignee}</span>`:''}
+          ${t.due?`<span class="task-detail" style="${t.overdue?'color:var(--red);':''}">${t.overdue?'⚠ ':''}${fmtDate(t.due)}</span>`:''}
+        </div>
+      </div>
+      ${t.overdue?`<span class="task-priority high">Overdue</span>`:t.done?`<span class="task-priority low">Done</span>`:`<span class="task-priority medium">Pending</span>`}
+    </div>`).join('');
+}
+
+function toggleTask(evId, idx) {
+  const ev = state.events.find(e=>e.id===evId);
+  if(ev && ev.tasks[idx]) {
+    ev.tasks[idx].done = !ev.tasks[idx].done;
+    save(); renderAll();
+    if(selectedEventId===evId) showEventPanel(ev);
+  }
+}
+
+// ── Emails ───────────────────────────────────────────────────────────────────
+function renderEmails() {
+  const el = document.getElementById('email-log-list');
+  if(!state.emails.length){el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>No emails processed yet.</p></div>`;return;}
+  el.innerHTML = state.emails.map(em=>`
+    <div class="email-item ${em.read?'':'unread'}">
+      <div class="email-subject">${em.subject}</div>
+      <div class="email-meta">From: ${em.from} · ${fmtDatetime(em.received)}</div>
+      <span class="email-status ${em.status}">${em.status==='imported'?'✓ Imported':em.status==='pending'?'⏳ Pending':'✗ Failed'}</span>
+    </div>`).join('');
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+let taskInputCount = 0;
+function openModal(){taskInputCount=0;document.getElementById('task-inputs').innerHTML='';addTaskInput();document.getElementById('modal-overlay').classList.add('show');}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('show');}
+function closeModalIfBg(e){if(e.target.id==='modal-overlay')closeModal();}
+
+function addTaskInput(){
+  taskInputCount++;
+  const div=document.createElement('div');
+  div.style.cssText='display:grid;grid-template-columns:1fr 120px 130px auto;gap:8px;margin-bottom:8px;align-items:center;';
+  div.innerHTML=`<input class="form-input" placeholder="Task name" data-role="tname" style="font-size:13px;"/>
+    <input class="form-input" placeholder="Assigned to" data-role="tassign" style="font-size:13px;"/>
+    <input class="form-input" type="date" data-role="tdue" style="font-size:13px;"/>
+    <button onclick="this.parentElement.remove()" style="width:28px;height:28px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);cursor:pointer;color:var(--text3);font-size:16px;display:flex;align-items:center;justify-content:center;">×</button>`;
+  document.getElementById('task-inputs').appendChild(div);
+}
+
+function saveEvent(){
+  const title=document.getElementById('f-title').value.trim();
+  const date=document.getElementById('f-date').value;
+  if(!title||!date){toast('Title and date are required','error');return;}
+  const taskRows=[...document.getElementById('task-inputs').querySelectorAll('div')];
+  const tasks=taskRows.map(row=>({
+    name:row.querySelector('[data-role=tname]').value.trim(),
+    assignee:row.querySelector('[data-role=tassign]').value.trim(),
+    due:row.querySelector('[data-role=tdue]').value,
+    done:false
+  })).filter(t=>t.name);
+  const ev={
+    id:'ev_'+Date.now(),
+    title,
+    date,
+    time:document.getElementById('f-time').value,
+    location:document.getElementById('f-location').value,
+    duration:document.getElementById('f-duration').value,
+    category:document.getElementById('f-category').value,
+    notes:document.getElementById('f-notes').value,
+    tasks,
+    source:'manual',
+    createdAt:new Date().toISOString()
+  };
+  state.events.push(ev);
+  save(); renderAll(); closeModal();
+  toast('Event added: '+title,'success');
+  // Send notification if configured
+  if(state.settings.gasUrl) sendNotification(ev);
+}
+
+function deleteSelectedEvent(){
+  if(!selectedEventId) return;
+  state.events=state.events.filter(e=>e.id!==selectedEventId);
+  selectedEventId=null;
+  document.getElementById('event-panel').classList.remove('show');
+  save(); renderAll(); toast('Event deleted');
+}
+
+// ── Sync ─────────────────────────────────────────────────────────────────────
+async function triggerSync(){
+  const url=state.settings.gasUrl||localStorage.getItem('abc_gas_url');
+  if(!url){toast('Set your Apps Script URL in Settings first','error');return;}
+  setSyncState(true);
+  try {
+    const res = await fetch(url+'?action=sync');
+    const data = await res.json();
+    if(data.events) { data.events.forEach(e=>{ if(!state.events.find(x=>x.id===e.id)) state.events.push(e); }); }
+    if(data.emails) { data.emails.forEach(e=>{ if(!state.emails.find(x=>x.id===e.id)) state.emails.push(e); }); }
+    save(); renderAll(); setSyncState(false);
+    toast(`Synced: ${(data.events||[]).length} events, ${(data.emails||[]).length} emails`,'success');
+  } catch(err) {
+    setSyncState(false); toast('Sync failed – check GAS URL','error');
+  }
+}
+
+async function silentSync(){
+  const url=state.settings.gasUrl;
+  if(!url) return;
+  try{
+    const res=await fetch(url+'?action=sync');
+    const data=await res.json();
+    if(data.events) data.events.forEach(e=>{ if(!state.events.find(x=>x.id===e.id)) state.events.push(e); });
+    if(data.emails) data.emails.forEach(e=>{ if(!state.emails.find(x=>x.id===e.id)) state.emails.push(e); });
+    save(); renderAll();
+  }catch(e){}
+}
+
+async function sendNotification(ev){
+  const url=state.settings.gasUrl;
+  if(!url) return;
+  try{ await fetch(url+'?action=notify',{method:'POST',body:JSON.stringify(ev)}); }catch(e){}
+}
+
+function setSyncState(syncing){
+  document.getElementById('sync-dot').className='sync-dot'+(syncing?'':' idle');
+  document.getElementById('sync-text').textContent=syncing?'Syncing...':'Last sync: '+new Date().toLocaleTimeString();
+}
+
+// ── Settings ─────────────────────────────────────────────────────────────────
+function saveSettings(){
+  state.settings.gasUrl=document.getElementById('gas-url').value.trim();
+  state.settings.notifyEmails=document.getElementById('notify-emails').value.trim();
+  localStorage.setItem('abc_gas_url',state.settings.gasUrl);
+  save(); toast('Settings saved','success');
+}
+
+// ── Utils ────────────────────────────────────────────────────────────────────
+function fmtDate(d){if(!d)return'—';const x=new Date(d+'T00:00');return x.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDatetime(d){if(!d)return'—';return new Date(d).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}
+
+function toast(msg,type=''){
+  const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:'');
+  t.innerHTML=(type==='success'?`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:type==='error'?`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`)+msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='abc_task_data.json';a.click();
+}
+
+function clearAllData(){
+  if(!confirm('Clear ALL events, tasks and email logs? This cannot be undone.')) return;
+  state.events=[];state.emails=[];save();renderAll();toast('All data cleared');
+}
+
+// ── Load demo data if empty ───────────────────────────────────────────────────
+function loadDemo(){
+  if(state.events.length) return;
+  const today=new Date();
+  const d1=new Date(today);d1.setDate(d1.getDate()+2);
+  const d2=new Date(today);d2.setDate(d2.getDate()+5);
+  const d3=new Date(today);d3.setDate(d3.getDate()-1);
+  state.events=[
+    {id:'demo1',title:'Tenant Fit-Out Review',date:fmt(d1),time:'10:00',location:'ABC Verdun Mall – Meeting Room 2',duration:'90',category:'inspection',notes:'Coordinate with MEP team before inspection.',tasks:[
+      {name:'Inspect Unit 12B fit-out progress',assignee:'John',due:fmt(d1),done:false},
+      {name:'Send reminder to contractor',assignee:'Sara',due:fmt(d1),done:true},
+      {name:'Prepare inspection checklist',assignee:'Sultan',due:fmt(d1),done:false},
+    ],source:'email',createdAt:new Date().toISOString()},
+    {id:'demo2',title:'Weekly Operations Review',date:fmt(d2),time:'09:00',location:'ABC Verdun Mall – Board Room',duration:'60',category:'operations',notes:'',tasks:[
+      {name:'Prepare KPI report',assignee:'Sultan',due:fmt(d2),done:false},
+      {name:'Compile footfall data',assignee:'Rima',due:fmt(d2),done:false},
+    ],source:'manual',createdAt:new Date().toISOString()},
+    {id:'demo3',title:'Emergency AC Maintenance',date:fmt(d3),time:'14:00',location:'Level B1 – Technical Room',duration:'120',category:'maintenance',notes:'Unit 7 compressor fault.',tasks:[
+      {name:'Call HVAC contractor',assignee:'Sultan',due:fmt(d3),done:true},
+      {name:'File maintenance report',assignee:'Sultan',due:fmt(d3),done:false},
+    ],source:'manual',createdAt:new Date().toISOString()},
+  ];
+  state.emails=[
+    {id:'em1',subject:'[ABC-TASK] Tenant Fit-Out Review',from:'sultan@abc.com',received:new Date(Date.now()-3600000).toISOString(),status:'imported',read:true},
+  ];
+  save();
+}
+
+function fmt(d){return d.toISOString().split('T')[0];}
+
+loadDemo();
+init();
+</script>
+</body>
+</html>
